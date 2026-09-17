@@ -1,3 +1,4 @@
+import { matchesCreateTimeRange } from "@/lib/export-time-filter";
 import { getExportBizMeta, type ExportBizType } from "@/lib/export-registry";
 import type {
   ExportRecord,
@@ -48,6 +49,29 @@ const MOCK_SEED: MockRecord[] = [
     createTime: "2025-09-08 16:30:45",
     status: "SUCCEEDED",
   },
+  {
+    id: "exp-ch-001",
+    bizType: "CHANNEL_PAYMENT",
+    fileName: "channel_order_20250910120000.xlsx",
+    createTime: "2025-09-10 12:00:00",
+    status: "SUCCEEDED",
+  },
+  {
+    id: "exp-gr-001",
+    bizType: "GATEWAY_REFUND",
+    fileName: "refund_order_20250911100000.xlsx",
+    createTime: "2025-09-11 10:00:00",
+    status: "PROCESSING",
+  },
+  {
+    id: "exp-cr-fail",
+    bizType: "CHANNEL_REFUND",
+    fileName: "channel_refund_20250909140000.xlsx",
+    createTime: "2025-09-09 14:00:00",
+    status: "FAILED",
+    failReason: "数仓查询超时",
+    requestParams: { limit: 100, offset: 0 },
+  },
 ];
 
 let mockStore: MockRecord[] = [...MOCK_SEED];
@@ -66,11 +90,21 @@ function nowFileStamp(): string {
 }
 
 function mockPage(req: ExportRecordPageReq): PagedResult<ExportRecord> {
-  let list = mockStore.filter((t) => t.bizType === req.bizType);
+  let list = [...mockStore];
+  if (req.bizType) list = list.filter((t) => t.bizType === req.bizType);
   if (req.status) list = list.filter((t) => t.status === req.status);
+  if (req.createTimeStart || req.createTimeEnd) {
+    list = list.filter((t) =>
+      matchesCreateTimeRange(t.createTime, req.createTimeStart, req.createTimeEnd),
+    );
+  }
+  list.sort((a, b) => (a.createTime < b.createTime ? 1 : -1));
   const start = (req.current - 1) * req.size;
   return {
-    data: list.slice(start, start + req.size).map(({ bizType: _, ...record }) => record),
+    data: list.slice(start, start + req.size).map(({ bizType, ...rest }) => ({
+      ...rest,
+      bizType,
+    })),
     total: list.length,
     size: req.size,
     current: req.current,
@@ -99,8 +133,14 @@ export function mockSubmitExportTask(bizType: ExportBizType): ExportRecord {
   }, 2500);
   mockTimers.set(id, timer);
 
-  const { bizType: _, ...publicRecord } = record;
-  return publicRecord;
+  return {
+    id: record.id,
+    bizType: record.bizType,
+    fileName: record.fileName,
+    createTime: record.createTime,
+    status: record.status,
+    failReason: record.failReason,
+  };
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -160,10 +200,21 @@ export async function triggerExportDownload(record: ExportRecord): Promise<void>
   window.open(url, "_blank");
 }
 
-export function buildExportPageReq(
-  bizType: ExportBizType,
-  current: number,
-  size: number,
-): ExportRecordPageReq {
-  return { bizType, current, size };
+export function buildExportPageReq(params: {
+  bizType?: ExportBizType;
+  status?: ExportRecordPageReq["status"];
+  createTimeStart?: string;
+  createTimeEnd?: string;
+  current: number;
+  size: number;
+}): ExportRecordPageReq {
+  const { bizType, status, createTimeStart, createTimeEnd, current, size } = params;
+  return {
+    ...(bizType ? { bizType } : {}),
+    ...(status ? { status } : {}),
+    ...(createTimeStart ? { createTimeStart } : {}),
+    ...(createTimeEnd ? { createTimeEnd } : {}),
+    current,
+    size,
+  };
 }

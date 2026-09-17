@@ -7,20 +7,27 @@ import {
   triggerExportDownload,
 } from "@/lib/export-api";
 import type { ExportBizType } from "@/lib/export-registry";
-import type { ExportRecord } from "@/types/export-task";
+import type { ApiExportTaskStatus, ExportRecord } from "@/types/export-task";
 
-const DEFAULT_PAGE_SIZE = 5;
+const DEFAULT_PAGE_SIZE = 10;
 const POLL_INTERVAL_MS = 3000;
 
 export interface UseExportRecordsOptions {
-  bizType: ExportBizType;
-  open: boolean;
+  bizType?: ExportBizType;
+  status?: ApiExportTaskStatus;
+  createTimeStart?: string;
+  createTimeEnd?: string;
+  /** 为 false 时不拉取 */
+  enabled?: boolean;
   pageSize?: number;
 }
 
 export function useExportRecords({
   bizType,
-  open,
+  status,
+  createTimeStart,
+  createTimeEnd,
+  enabled = true,
   pageSize = DEFAULT_PAGE_SIZE,
 }: UseExportRecordsOptions) {
   const [page, setPage] = useState(1);
@@ -32,7 +39,16 @@ export function useExportRecords({
     async (pageNum: number) => {
       setLoading(true);
       try {
-        const result = await pageExportRecords(buildExportPageReq(bizType, pageNum, pageSize));
+        const result = await pageExportRecords(
+          buildExportPageReq({
+            bizType,
+            status,
+            createTimeStart,
+            createTimeEnd,
+            current: pageNum,
+            size: pageSize,
+          }),
+        );
         setRecords(result.data);
         setTotal(result.total);
         setPage(pageNum);
@@ -40,27 +56,29 @@ export function useExportRecords({
         setLoading(false);
       }
     },
-    [bizType, pageSize],
+    [bizType, status, createTimeStart, createTimeEnd, pageSize],
   );
 
   const refresh = useCallback(() => fetchPage(page), [fetchPage, page]);
 
   useEffect(() => {
-    if (open) setPage(1);
-  }, [open, bizType]);
+    if (!enabled) return;
+    setPage(1);
+    fetchPage(1);
+  }, [enabled, bizType, status, createTimeStart, createTimeEnd, pageSize, fetchPage]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!enabled || page <= 1) return;
     fetchPage(page);
-  }, [open, page, fetchPage]);
+  }, [enabled, page, fetchPage]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!enabled) return;
     const hasProcessing = records.some((r) => r.status === "PROCESSING");
     if (!hasProcessing) return;
     const timer = setInterval(() => fetchPage(page), POLL_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [open, records, page, fetchPage]);
+  }, [enabled, records, page, fetchPage]);
 
   return {
     records,

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { Eye, RotateCcw, Search } from "lucide-react";
-import { ExportRecordsDialog, ExportToolbar } from "@/components/export";
+import { ExportToolbar } from "@/components/export";
 import { Button } from "@/components/ui/button";
 import { submitGatewayPaymentExport } from "@/lib/gateway-payment-export";
 import {
@@ -87,7 +87,6 @@ export function GatewayPaymentList() {
   const [filters, setFilters] = useState(getDefaultFilters);
   const [applied, setApplied] = useState(getDefaultFilters);
   const [page, setPage] = useState(1);
-  const [exportOpen, setExportOpen] = useState(false);
   const [exportSubmitting, setExportSubmitting] = useState(false);
 
   const filtered = useMemo(() => {
@@ -113,7 +112,6 @@ export function GatewayPaymentList() {
     setExportSubmitting(true);
     try {
       await submitGatewayPaymentExport(applied);
-      setExportOpen(true);
     } finally {
       setExportSubmitting(false);
     }
@@ -193,8 +191,8 @@ export function GatewayPaymentList() {
 
         <ExportToolbar
           onExport={submitExport}
-          onOpenRecords={() => setExportOpen(true)}
           exporting={exportSubmitting}
+          recordsHref="/export-records?bizType=GATEWAY_PAYMENT"
         />
 
         <div className="min-h-0 flex-1 overflow-auto">
@@ -257,12 +255,6 @@ export function GatewayPaymentList() {
         </div>
       </div>
 
-      <ExportRecordsDialog
-        bizType="GATEWAY_PAYMENT"
-        open={exportOpen}
-        onClose={() => setExportOpen(false)}
-        onRetry={submitExport}
-      />
     </>
   );
 }

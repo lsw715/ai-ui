@@ -1,25 +1,27 @@
 "use client";
 
+import Link from "next/link";
 import { Download, FileOutput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface ExportToolbarProps {
   onExport: () => void | Promise<void>;
-  onOpenRecords: () => void;
   exporting?: boolean;
   exportLabel?: string;
+  /** 跳转统一导出中心；可带 ?bizType= 预筛选 */
+  recordsHref?: string;
   recordsLabel?: string;
 }
 
 /**
- * 列表页通用导出工具栏：「导出」+「导出记录」
+ * 列表页导出工具栏：「导出」+ 跳转「导出中心」
  */
 export function ExportToolbar({
   onExport,
-  onOpenRecords,
   exporting = false,
   exportLabel = "导出",
-  recordsLabel = "导出记录",
+  recordsHref = "/export-records",
+  recordsLabel = "导出中心",
 }: ExportToolbarProps) {
   return (
     <div className="flex items-center border-b border-[var(--color-ops-border)] px-4 py-3">
@@ -32,14 +34,13 @@ export function ExportToolbar({
         <Download className="mr-1.5 size-4" />
         {exporting ? "提交中…" : exportLabel}
       </Button>
-      <Button
-        variant="ghost"
-        className="ml-2 h-[32px] text-[13px] text-[#666] hover:text-[var(--primary)]"
-        onClick={onOpenRecords}
+      <Link
+        href={recordsHref}
+        className="ml-2 inline-flex h-[32px] items-center rounded-md px-3 text-[13px] text-[#666] hover:bg-[#f5f5f5] hover:text-[var(--primary)]"
       >
         <FileOutput className="mr-1.5 size-4" />
         {recordsLabel}
-      </Button>
+      </Link>
     </div>
   );
 }
