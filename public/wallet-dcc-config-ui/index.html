@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>企业配置详情 - PayKKa收单运营平台</title>
+<style>
+  :root{
+    --primary:#2b5bd7;
+    --primary-weak:#eaf0ff;
+    --top:#1f2430;
+    --top-hover:#323a4a;
+    --side:#232936;
+    --side-sub:#2b3242;
+    --side-hover:#394154;
+    --side-text:#c6ccd8;
+    --side-active:#ffffff;
+    --content:#f2f4f7;
+    --card:#ffffff;
+    --border:#e3e7ee;
+    --border-strong:#d4dae4;
+    --text:#1f2733;
+    --text-weak:#6b7686;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;background:var(--content);color:var(--text);
+    font:13px/1.5 "PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  }
+  button{font:inherit;}
+  .app{display:flex;flex-direction:column;height:100vh;}
+
+  /* ---------- top nav ---------- */
+  .topbar{
+    height:48px;background:var(--top);color:#e7ebf3;
+    display:flex;align-items:center;padding:0 16px;gap:22px;flex:none;
+  }
+  .brand{font-weight:600;letter-spacing:.4px;font-size:14px;color:#fff;}
+  .topbar .nav{display:flex;gap:20px;font-size:13px;color:#cfd6e4;}
+  .topbar .nav span{cursor:default;padding:2px 0;border-bottom:2px solid transparent;}
+  .topbar .nav span:hover{color:#fff;}
+  .topbar .nav span.on{color:#fff;border-bottom-color:#4a86ff;}
+  .topbar .user{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:#cfd6e4;}
+  .avatar{width:24px;height:24px;border-radius:50%;background:#4a86ff;color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:12px;}
+
+  /* ---------- tab bar ---------- */
+  .tabbar{
+    height:40px;background:#fff;border-bottom:1px solid var(--border);
+    display:flex;align-items:stretch;flex:none;
+  }
+  .tabbar .tab{
+    display:flex;align-items:center;gap:8px;padding:0 16px;font-size:13px;
+    color:var(--text-weak);border-right:1px solid var(--border);
+  }
+  .tabbar .tab.on{color:var(--primary);box-shadow:inset 0 -2px 0 var(--primary);background:#fff;}
+  .tabbar .tab .x{color:#b6bdc9;}
+  .tabbar .tab.on .x:hover{color:var(--text);}
+
+  /* ---------- body ---------- */
+  .body{flex:1;display:flex;min-height:0;}
+  .sidebar{
+    width:186px;flex:none;background:var(--side);color:var(--side-text);
+    overflow-y:auto;padding:8px 0;
+  }
+  .sidebar .group-title{
+    padding:9px 16px;font-size:13px;color:#8f99ab;display:flex;justify-content:space-between;
+  }
+  .sidebar .item{padding:8px 16px 8px 28px;font-size:13px;cursor:pointer;}
+  .sidebar .item:hover{background:var(--side-hover);color:#fff;}
+  .sidebar .item.on{background:var(--primary);color:#fff;}
+  .sidebar .group.open{background:var(--side-sub);}
+
+  .content{flex:1;min-width:0;overflow:auto;padding:16px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);}
+
+  .card-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-bottom:1px solid var(--border);
+  }
+  .card-head h2{margin:0;font-size:15px;font-weight:600;}
+  .card-body{padding:0;}
+
+  .info-table{width:100%;border-collapse:collapse;}
+  .info-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;}
+  .info-table td.k{width:120px;color:var(--text-weak);background:#fafbfc;}
+
+  .switch-row{
+    display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);
+  }
+  .switch-row .label{color:var(--text-weak);}
+  .switch{display:inline-flex;align-items:center;gap:8px;}
+  .switch input{appearance:none;width:36px;height:20px;border-radius:20px;background:#c9d2df;position:relative;cursor:pointer;}
+  .switch input:checked{background:var(--primary);}
+  .switch input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s;}
+  .switch input:checked::after{left:18px;}
+  .hint{color:#98a2b3;font-size:12px;}
+
+  .sect{padding:16px;}
+  .sect h3{margin:0 0 12px;font-size:13px;font-weight:600;}
+  .sect h3::before{content:"";display:inline-block;width:3px;height:12px;background:var(--primary);
+    margin-right:8px;vertical-align:-1px;border-radius:1px;}
+
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .tabs + .tabs{margin-top:8px;}
+  .tabs button{
+    height:30px;padding:0 14px;border:1px solid var(--border-strong);background:#fff;
+    border-radius:var(--radius);color:var(--text);cursor:pointer;font-size:13px;
+  }
+  .tabs button:hover{border-color:var(--primary);color:var(--primary);}
+  .tabs button.on{background:var(--primary-weak);border-color:var(--primary);color:var(--primary);font-weight:500;}
+
+  .filterbar{
+    display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px;
+    background:#fafbfc;border:1px solid var(--border);border-radius:var(--radius);flex-wrap:wrap;
+  }
+  .filterbar label{color:var(--text-weak);font-size:13px;}
+  select,input[type=text]{
+    height:32px;padding:0 10px;border:1px solid var(--border-strong);border-radius:var(--radius);
+    background:#fff;color:var(--text);font-size:13px;outline:none;
+  }
+  select:focus,input:focus{border-color:var(--primary);}
+  .filterbar select{width:150px;}
+
+  .opts{margin-left:auto;display:flex;gap:8px;}
+  .btn{
+    height:32px;padding:0 14px;border-radius:var(--radius);border:1px solid var(--border-strong);
+    background:#fff;color:var(--text);cursor:pointer;font-size:13px;
+  }
+  .btn:hover{border-color:var(--primary);color:var(--primary);}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .btn.primary:hover{filter:brightness(1.06);color:#fff;}
+  .btn.link{border-color:transparent;background:transparent;color:var(--primary);padding:0 6px;}
+
+  .rule-wrap{margin-top:12px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+  table.rule{width:100%;border-collapse:collapse;font-size:13px;}
+  table.rule th{
+    background:#f7f8fa;color:var(--text-weak);font-weight:500;text-align:left;
+    padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  table.rule td{padding:10px 12px;border-bottom:1px solid var(--border);}
+  table.rule tr:last-child td{border-bottom:none;}
+  table.rule tr:hover td{background:#fbfcfe;}
+  .tag{
+    display:inline-block;padding:1px 7px;border-radius:2px;font-size:12px;
+    background:var(--primary-weak);color:var(--primary);
+  }
+  .tag.off{background:#f1f3f6;color:#8a94a3;}
+  .muted{color:#a4adba;}
+  .new-col{background:#fffaf0 !important;}
+  .new-tag{font-size:11px;color:#c47b00;border:1px solid #f0cf9a;background:#fff8ec;
+    border-radius:2px;padding:0 4px;margin-left:6px;vertical-align:1px;}
+  table.rule select, table.rule input.markup{
+    height:30px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;
+    color:var(--text);font-size:13px;padding:0 6px;
+  }
+  table.rule select{padding-right:22px;}
+  table.rule input.markup{width:56px;text-align:right;padding:0 8px;}
+  table.rule select:disabled, table.rule input.markup:disabled{background:#f5f6f8;color:#a4adba;}
+
+  .table-foot{
+    display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--border);
+    color:var(--text-weak);font-size:13px;flex-wrap:wrap;
+  }
+  .pager{margin-left:auto;display:flex;align-items:center;gap:6px;}
+  .pager button{
+    min-width:26px;height:26px;border:1px solid var(--border-strong);background:#fff;
+    border-radius:2px;color:var(--text);cursor:pointer;font-size:12px;
+  }
+  .pager button.on{border-color:var(--primary);color:var(--primary);}
+  .pager input{width:44px;height:26px;text-align:center;}
+
+  .page-foot{display:flex;justify-content:center;padding:16px 0 4px;}
+
+  .empty{padding:32px;text-align:center;color:var(--text-weak);}
+  .toast{
+    position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#1f2733;color:#fff;
+    padding:8px 14px;border-radius:3px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;
+  }
+  .toast.show{opacity:1;}
+
+  .modal-mask{
+    position:fixed;inset:0;background:rgba(31,39,51,.35);display:flex;align-items:flex-start;
+    justify-content:center;padding-top:110px;z-index:50;
+  }
+  .modal{width:520px;background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.18);}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+  .modal-head h3{margin:0;font-size:15px;}
+  .modal-body{padding:0;}
+  .modal-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 16px;border-top:1px solid var(--border);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <span class="brand">PayKKa</span>
+    <div class="nav">
+      <span>企业</span><span class="on">交易</span><span>清算</span><span>风控</span><span>会计</span>
+      <span>基础</span><span>汇率</span><span>系统</span><span>报表</span><span>销售</span><span>监控</span>
+    </div>
+    <div class="user"><span class="avatar">王</span><span>wangjunle</span></div>
+  </div>
+
+  <div class="tabbar">
+    <div class="tab">首页</div>
+    <div class="tab on"><span id="pageTabTitle">自动换币 - 企业配置</span> <span class="x">×</span></div>
+  </div>
+
+  <div class="body">
+    <aside class="sidebar">
+      <div class="group-title">网关订单 <span>›</span></div>
+      <div class="item">网关付款订单</div>
+      <div class="item">网关退款订单</div>
+      <div class="item">退款审核</div>
+      <div class="item">日志查询</div>
+
+      <div class="group-title">渠道订单 <span>›</span></div>
+      <div class="item">渠道付款订单</div>
+      <div class="item">渠道退款订单</div>
+
+      <div class="group-title">账单 <span>›</span></div>
+      <div class="item">订阅</div>
+      <div class="item">账单</div>
+
+      <div class="group-title">自动换币 <span>⌄</span></div>
+      <div class="item on" data-nav="list">企业配置</div>
+      <div class="item" data-nav="audit">配置审核</div>
+
+      <div class="group-title">独立 3DS <span>›</span></div>
+      <div class="item">3DS 认证记录</div>
+    </aside>
+
+    <main class="content">
+      <div id="listView">
+        <section class="card">
+          <div class="sect">
+            <div class="filterbar">
+              <label for="bizNo">企业编号</label>
+              <input type="text" id="bizNo" placeholder="请输入" />
+              <label for="bizName">企业名称</label>
+              <input type="text" id="bizName" placeholder="请输入" />
+              <div class="opts">
+                <button class="btn primary" id="listSearchBtn">搜索</button>
+                <button class="btn" id="listResetBtn">重置</button>
+                <button class="btn link" id="listExpandBtn">展开 ⌄</button>
+              </div>
+            </div>
+            <div style="margin-top:12px;">
+              <button class="btn primary" id="createBtn">创建</button>
+            </div>
+            <div class="rule-wrap">
+              <table class="rule">
+                <thead>
+                  <tr>
+                    <th>企业编号</th>
+                    <th>企业名称</th>
+                    <th>换币设置</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                    <th>审核人</th>
+                    <th>审核时间</th>
+                    <th>更新时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><button class="btn link" data-enter="M26030515110600273">M26030515110600273</button></td>
+                    <td>孝感麦乐鸡</td>
+                    <td><span class="tag">开启</span></td>
+                    <td>zhuyeheng</td>
+                    <td>2026-09-14 16:56:31</td>
+                    <td>zhuyeheng</td>
+                    <td>2026-09-17 15:06:59</td>
+                    <td>2026-09-15 12:39:01</td>
+                  </tr>
+                  <tr>
+                    <td><button class="btn link" data-enter="16384318269880">16384318269880</button></td>
+                    <td>海天一色餐饮有限公司</td>
+                    <td><span class="tag">开启</span></td>
+                    <td>zhuyeheng</td>
+                    <td>2026-09-10 18:26:16</td>
+                    <td>huangwei</td>
+                    <td>2026-09-17 09:20:26</td>
+                    <td>2026-09-17 09:20:19</td>
+                  </tr>
+                  <tr>
+                    <td><button class="btn link" data-enter="M25110309404000380">M25110309404000380</button></td>
+                    <td>TimCook健康家</td>
+                    <td><span class="tag">开启</span></td>
+                    <td>haoxiaolong</td>
+                    <td>2026-09-11 18:11:16</td>
+                    <td>haoxiaolong</td>
+                    <td>2026-09-16 18:21:55</td>
+                    <td>2026-09-15 14:34:05</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="table-foot">
+                <button class="btn" id="listRefreshBtn">刷新</button>
+                <span>共 18 项</span>
+                <select><option>10 / 页</option><option>20 / 页</option><option>50 / 页</option></select>
+                <div class="pager">
+                  <span>1 2</span>
+                  <span>跳至</span><input type="text" value="1" /><span>页</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="addView" style="display:none">
+        <section class="card">
+          <div class="card-head">
+            <h2>自动换币单企业配置</h2>
+          </div>
+          <div class="card-body">
+            <table class="info-table">
+              <tr>
+                <td class="k">企业 *</td>
+                <td><input type="text" id="addBizSearch" placeholder="请输入企业号或企业名称搜索" style="width:320px;" /></td>
+              </tr>
+              <tr>
+                <td class="k">换币设置 *</td>
+                <td>
+                  <label style="display:block;margin-bottom:8px;">
+                    <input type="radio" name="addDcc" value="off" checked /> 关闭
+                    <span class="hint">关闭后不执行自动换币，交易系统将使用商户出示币种直接上送渠道</span>
+                  </label>
+                  <label style="display:block;">
+                    <input type="radio" name="addDcc" value="on" /> 启用
+                    <span class="hint">开启后将执行自动换币，交易系统将根据规则换币后上送渠道</span>
+                  </label>
+                </td>
+              </tr>
+            </table>
+
+            <div class="sect">
+              <h3>币种规则</h3>
+              <div class="tabs" id="addChannelTabs">
+                <button data-channel="WORLDPAY">Worldpay</button>
+                <button data-channel="STRIPE">Stripe</button>
+                <button data-channel="DLOCAL" class="on">DLOCAL</button>
+              </div>
+              <div class="tabs" id="addSceneTabs">
+                <button data-scene="WALLET" class="on">钱包</button>
+                <button data-scene="CARD">卡</button>
+              </div>
+              <div class="tabs" id="addTypeTabs">
+                <button data-type="CHANNEL" class="on">转为渠道支持币种</button>
+                <button data-type="CARDBIN">转为消费者卡 BIN 币种</button>
+              </div>
+              <div class="filterbar">
+                <label for="addModeFilter">处理方式</label>
+                <select id="addModeFilter">
+                  <option value="">请选择</option>
+                  <option>自动换币</option>
+                  <option>不转换</option>
+                </select>
+                <label for="addCurrencyFilter">商户出示币种</label>
+                <select id="addCurrencyFilter"><option value="">请选择</option></select>
+                <div class="opts">
+                  <button class="btn primary" id="addSearchBtn">搜索</button>
+                  <button class="btn" id="addResetBtn">重置</button>
+                </div>
+              </div>
+              <div class="rule-wrap">
+                <table class="rule">
+                  <thead id="addRuleHead"></thead>
+                  <tbody id="addRuleBody"></tbody>
+                </table>
+                <div class="table-foot">
+                  <button class="btn" id="addRulesRefresh">刷新</button>
+                  <span id="addTotalText">共 0 项</span>
+                  <select><option>10 / 页</option><option>20 / 页</option><option>50 / 页</option></select>
+                  <div class="pager">
+                    <span>1</span>
+                    <span>跳至</span><input type="text" value="1" /><span>页</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="page-foot">
+            <button class="btn" id="addBackBtn">返回</button>
+            <button class="btn primary" id="addSubmitBtn">提交审核</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="editView" style="display:none">
+        <section class="card">
+          <div class="card-head">
+            <h2>自动换币单企业配置</h2>
+          </div>
+          <div class="card-body">
+            <table class="info-table">
+              <tr>
+                <td class="k">企业 *</td>
+                <td>孝感麦乐鸡(M26030515110600273)</td>
+              </tr>
+              <tr>
+                <td class="k">换币设置 *</td>
+                <td>
+                  <label style="margin-right:16px;"><input type="radio" name="editDcc" value="off" /> 关闭</label>
+                  <label><input type="radio" name="editDcc" value="on" checked /> 启用</label>
+                </td>
+              </tr>
+            </table>
+            <div class="sect">
+              <h3>币种规则</h3>
+              <div class="tabs" id="editChannelTabs">
+                <button data-channel="WORLDPAY" class="on">Worldpay</button>
+                <button data-channel="STRIPE">Stripe</button>
+                <button data-channel="DLOCAL">DLOCAL</button>
+              </div>
+              <div class="tabs" id="editSceneTabs">
+                <button data-scene="WALLET" class="on">钱包</button>
+                <button data-scene="CARD">卡</button>
+              </div>
+              <div class="tabs" id="editTypeTabs">
+                <button data-type="CHANNEL" class="on">转为渠道支持币种</button>
+                <button data-type="CARDBIN">转为消费者卡 BIN 币种</button>
+              </div>
+              <div class="filterbar">
+                <label for="editModeFilter">处理方式</label>
+                <select id="editModeFilter">
+                  <option value="">请选择</option>
+                  <option>自动换币</option>
+                  <option>不转换</option>
+                </select>
+                <label for="editCurrencyFilter">商户出示币种</label>
+                <select id="editCurrencyFilter"><option value="">请选择</option></select>
+                <div class="opts">
+                  <button class="btn primary" id="editSearchBtn">搜索</button>
+                  <button class="btn" id="editResetBtn">重置</button>
+                </div>
+              </div>
+              <div class="rule-wrap">
+                <table class="rule">
+                  <thead id="editRuleHead"></thead>
+                  <tbody id="editRuleBody"></tbody>
+                </table>
+                <div class="table-foot">
+                  <button class="btn" id="editRefreshBtn">刷新</button>
+                  <span id="editTotalText">共 0 项</span>
+                  <select><option>10 / 页</option><option>20 / 页</option><option>50 / 页</option></select>
+                  <div class="pager">
+                    <span>1</span>
+                    <span>跳至</span><input type="text" value="1" /><span>页</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="page-foot">
+            <button class="btn" id="editBackBtn">返回</button>
+            <button class="btn primary" id="editSubmitBtn">提交审核</button>
+          </div>
+        </section>
+      </div>
+
+      <div id="auditView" style="display:none">
+        <section class="card">
+          <div class="sect">
+            <div class="filterbar">
+              <label for="auditBizNo">企业编号</label>
+              <input type="text" id="auditBizNo" placeholder="请输入" />
+              <label for="auditBizName">企业名称</label>
+              <input type="text" id="auditBizName" placeholder="请输入" />
+              <label for="auditStatus">审核状态</label>
+              <select id="auditStatus">
+                <option>待审核</option>
+                <option>全部</option>
+                <option>已通过</option>
+                <option>已拒绝</option>
+              </select>
+              <div class="opts">
+                <button class="btn primary" id="auditSearchBtn">搜索</button>
+                <button class="btn" id="auditResetBtn">重置</button>
+              </div>
+            </div>
+            <div class="rule-wrap">
+              <table class="rule">
+                <thead>
+                  <tr>
+                    <th>企业编号</th>
+                    <th>企业名称</th>
+                    <th>换币设置</th>
+                    <th>创建人</th>
+                    <th>创建时间</th>
+                    <th>审核状态</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>M26030515110600273</td>
+                    <td>孝感麦乐鸡</td>
+                    <td><span class="tag">开启</span></td>
+                    <td>zhuyeheng</td>
+                    <td>2026-09-14 16:56:31</td>
+                    <td><span class="tag">待审核</span></td>
+                    <td><button class="btn link" data-audit="M26030515110600273">审核</button></td>
+                  </tr>
+                  <tr>
+                    <td>M26091116040300670</td>
+                    <td>深圳市测试科技有限公司</td>
+                    <td><span class="tag">开启</span></td>
+                    <td>haoxiaolong</td>
+                    <td>2026-09-14 14:04:52</td>
+                    <td><span class="tag">待审核</span></td>
+                    <td><button class="btn link" data-audit="M26091116040300670">审核</button></td>
+                  </tr>
+                  <tr>
+                    <td>M26090409572000619</td>
+                    <td>山东如意时尚投资控股有限公司</td>
+                    <td><span class="tag">开启</span></td>
+                    <td>haoxiaolong</td>
+                    <td>2026-09-15 16:56:28</td>
+                    <td><span class="tag">待审核</span></td>
+                    <td><button class="btn link" data-audit="M26090409572000619">审核</button></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="table-foot">
+                <button class="btn" id="auditRefreshBtn">刷新</button>
+                <span>共 3 项</span>
+                <select><option>10 / 页</option><option>20 / 页</option><option>50 / 页</option></select>
+                <div class="pager">
+                  <span>1</span>
+                  <span>跳至</span><input type="text" value="1" /><span>页</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="detailView" style="display:none">
+      <section class="card">
+        <div class="card-head">
+          <h2>自动换币单企业配置</h2>
+          <button class="btn" id="settingBtn">设置</button>
+        </div>
+        <div class="card-body">
+          <table class="info-table">
+            <tr>
+              <td class="k">企业名称</td><td>孝感麦乐鸡</td>
+              <td class="k">企业编号</td><td>M26030515110600273</td>
+            </tr>
+          </table>
+          <div class="switch-row">
+            <span class="label">换币设置</span>
+            <label class="switch">
+              <input type="checkbox" id="dccEnabled" checked />
+              <span id="dccEnabledText">启用</span>
+            </label>
+            <span class="hint">开启后将执行自动换币，交易系统将根据规则换币后上送渠道</span>
+          </div>
+
+          <div class="sect">
+            <h3>币种规则</h3>
+
+            <div class="tabs" id="channelTabs">
+              <button data-channel="WORLDPAY">Worldpay</button>
+              <button data-channel="STRIPE">Stripe</button>
+              <button data-channel="DLOCAL" class="on">DLOCAL</button>
+            </div>
+
+            <div class="tabs" id="sceneTabs">
+              <button data-scene="WALLET" class="on">钱包</button>
+              <button data-scene="CARD">卡</button>
+            </div>
+
+            <div class="tabs" id="typeTabs">
+              <button data-type="CHANNEL" class="on">转为渠道支持币种</button>
+              <button data-type="CARDBIN">转为消费者卡 BIN 币种</button>
+            </div>
+
+            <div class="filterbar">
+              <label for="modeFilter">处理方式</label>
+              <select id="modeFilter">
+                <option value="">请选择</option>
+                <option value="自动换币">自动换币</option>
+                <option value="不转换">不转换</option>
+              </select>
+              <div class="opts">
+                <button class="btn" id="addRuleBtn">新增规则</button>
+                <button class="btn primary" id="searchBtn">搜索</button>
+                <button class="btn" id="resetBtn">重置</button>
+                <button class="btn link" id="expandBtn">展开 ⌄</button>
+              </div>
+            </div>
+
+            <div class="rule-wrap">
+              <table class="rule" id="ruleTable">
+                <thead id="ruleHead"></thead>
+                <tbody id="ruleBody"></tbody>
+              </table>
+              <div class="table-foot">
+                <button class="btn" id="refreshBtn">刷新</button>
+                <span id="totalText">共 0 项</span>
+                <select><option>10 / 页</option><option>20 / 页</option><option>50 / 页</option></select>
+                <div class="pager">
+                  <span id="pageText">1 2 3</span>
+                  <span>跳至</span><input type="text" value="1" /><span>页</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="page-foot"><button class="btn" id="backBtn">返回</button></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="modal-mask" id="ruleModal" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="ruleModalTitle">编辑规则</h3>
+      <button class="btn link" id="ruleModalClose">×</button>
+    </div>
+    <div class="modal-body">
+      <table class="info-table">
+        <tr><td class="k">商户出示币种</td><td><input type="text" id="ruleSource" placeholder="如 USD" /></td></tr>
+        <tr id="rulePaymentRow"><td class="k">支付方式</td><td><select id="rulePayment"><option>PIX</option><option>PIC_PAY</option></select></td></tr>
+        <tr>
+          <td class="k">处理方式</td>
+          <td><select id="ruleMode"><option>自动换币</option><option>不转换</option></select></td>
+        </tr>
+        <tr><td class="k">目标币种</td><td><input type="text" id="ruleTarget" placeholder="如 BRL" /></td></tr>
+        <tr><td class="k">汇率加点</td><td><input type="text" id="ruleMarkup" placeholder="如 3%" /></td></tr>
+      </table>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="ruleModalCancel">取消</button>
+      <button class="btn primary" id="ruleModalSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const DATA = {
+    WORLDPAY: {
+      CHANNEL: [
+        ["CNY","自动换币","USD","1%"],
+        ["USD","不转换","-","-"],
+        ["JPY","不转换","-","-"],
+        ["EUR","不转换","-","-"]
+      ],
+      CARDBIN: [
+        ["USD","自动换币","JPY","3%"],
+        ["USD","自动换币","KRW","3%"],
+        ["USD","不转换","-","-"]
+      ]
+    },
+    STRIPE: {
+      CHANNEL: [
+        ["USD","自动换币","HKD","2%"],
+        ["CNY","不转换","-","-"]
+      ],
+      CARDBIN: [
+        ["USD","自动换币","TWD","3%"]
+      ]
+    },
+    DLOCAL: {
+      CHANNEL: [
+        ["USD","PIX","自动换币","BRL","3%"],
+        ["USD","PIC_PAY","自动换币","BRL","3%"],
+        ["EUR","PIX","自动换币","BRL","3%"],
+        ["USD","PIC_PAY","不转换","-","-"],
+        ["BRL","PIX","不转换","-","-"]
+      ],
+      CARDBIN: []
+    },
+    DLOCAL_CARD: {
+      CHANNEL: [
+        ["USD","自动换币","BRL","2%"],
+        ["EUR","自动换币","BRL","2%"]
+      ],
+      CARDBIN: []
+    }
+  };
+
+  let state = { channel: "DLOCAL", scene: "WALLET", type: "CHANNEL", mode: "" };
+  const head = document.getElementById("ruleHead");
+  const bodyEl = document.getElementById("ruleBody");
+  const totalText = document.getElementById("totalText");
+  const typeTabs = document.getElementById("typeTabs");
+
+  const HEX = {
+    WORLDPAY: ["商户出示币种","处理方式","目标币种","汇率加点"],
+    STRIPE: ["商户出示币种","处理方式","目标币种","汇率加点"],
+    DLOCAL: ["商户出示币种","支付方式","处理方式","目标币种","汇率加点"],
+    DLOCAL_CARD: ["商户出示币种","处理方式","目标币种","汇率加点"]
+  };
+
+  function channelKey(channel, scene){
+    return channel === "DLOCAL" && scene === "CARD" ? "DLOCAL_CARD" : channel;
+  }
+
+  const TARGET_CURRENCIES = ["BRL","USD","EUR","JPY","KRW","HKD","TWD","GBP","AUD","CAD"];
+  // 与 OPS 数据字典 CURRENCY 一致：来自后端 CurrencyEnum.values()（共 161 个）
+  const CURRENCY_CODES = ("CNY,USD,JPY,RUB,EUR,GBP,HKD,AUD,CAD,INR,KRW,MOP,MYR,NZD,SGD,CHF,THB,TWD,KWD,BHD,OMR,JOD,QAR,SAR,AED,SEK,DKK,NOK,ZAR,PHP,TRY,ILS,BRL,CZK,MXN,PLN,HUF," +
+    "AFN,ALL,AMD,ANG,AOA,ARS,AWG,AZN,BAM,BBD,BDT,BGN,BIF,BMD,BND,BOB,BOV,BSD,BTN,BWP,BYN,BZD,CDF,CLF,CLP,COP,CRC,CUC,CUP,CVE,DJF,DOP,DZD,EGP,ERN,ETB,FJD,FKP,GEL,GHS,GIP,GMD,GNF,GTQ,GYD,HNL,HRK,HTG,IDR,IQD,IRR,ISK,JMD,KES,KGS,KHR,KMF,KPW,KYD,KZT,LAK,LBP,LKR,LRD,LSL,LYD,MAD,MDL,MGA,MKD,MMK,MNT,MRO,MUR,MVR,MWK,MXV,MZN,NAD,NGN,NIO,NPR,PAB,PEN,PGK,PKR,PYG,RON,RSD,RWF,SBD,SCR,SDG,SHP,SLE,SOS,SRD,STD,SYP,SZL,TJS,TMT,TND,TOP,TTD,TZS,UAH,UGX,USN,USS,UYU,UZS,VEF,VND,VUV,WST,XAF,XCD,XOF,XPF,XXX,YER,ZMW,ZWL").split(",");
+
+  function isDlocal(){ return state.channel === "DLOCAL"; }
+  function isDlocalWallet(){ return isDlocal() && state.scene === "WALLET"; }
+
+  function render(){
+    const key = channelKey(state.channel, state.scene);
+    const sceneTabs = document.getElementById("sceneTabs");
+    sceneTabs.style.display = isDlocal() ? "" : "none";
+    [...sceneTabs.children].forEach(b => b.classList.toggle("on", b.dataset.scene === state.scene));
+    // dLocal：钱包没有卡 BIN，隐藏卡 BIN 类型页签
+    if (isDlocalWallet()) {
+      typeTabs.children[1].style.display = "none";
+      if (state.type === "CARDBIN") state.type = "CHANNEL";
+    } else {
+      typeTabs.children[1].style.display = "";
+    }
+
+    const cols = HEX[key];
+    head.innerHTML = "<tr>" + cols.map((c,i) =>
+      `<th>${c}${(isDlocalWallet() && i === 1) ? '<span class="new-tag">新增</span>' : ""}</th>`
+    ).join("") + "<th>操作</th></tr>";
+
+    let rows = (DATA[key][state.type] || []).slice();
+    if (isDlocalWallet()) {
+      const modeIdx = 2;
+      if (state.mode) rows = rows.filter(r => r[modeIdx] === state.mode);
+    } else {
+      const modeIdx = 1;
+      if (state.mode) rows = rows.filter(r => r[modeIdx] === state.mode);
+    }
+
+    if (!rows.length) {
+      bodyEl.innerHTML = `<tr><td colspan="${cols.length + 1}"><div class="empty">暂无数据</div></td></tr>`;
+    } else {
+      bodyEl.innerHTML = rows.map(r => {
+        const realIdx = DATA[key][state.type].indexOf(r);
+        const cells = r.map((v, i) => {
+          if (v === "-") return `<td class="muted">-</td>`;
+          if (v === "自动换币") return `<td><span class="tag">自动换币</span></td>`;
+          if (v === "不转换") return `<td><span class="tag off">不转换</span></td>`;
+          if (isDlocalWallet() && i === 1) return `<td class="new-col">${v}</td>`;
+          return `<td>${v}</td>`;
+        }).join("");
+        return `<tr>${cells}<td class="row-actions"><button class="btn link" data-edit="${realIdx}">编辑</button><button class="btn link" data-del="${realIdx}">删除</button></td></tr>`;
+      }).join("");
+    }
+
+    totalText.textContent = `共 ${rows.length} 项`;
+    document.getElementById("pageText").textContent = rows.length ? "1" : "1";
+  }
+
+  document.getElementById("channelTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-channel]");
+    if (!btn) return;
+    [...e.currentTarget.children].forEach(b => b.classList.toggle("on", b === btn));
+    state.channel = btn.dataset.channel;
+    state.mode = document.getElementById("modeFilter").value = "";
+    render();
+  });
+
+  document.getElementById("sceneTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-scene]");
+    if (!btn) return;
+    state.scene = btn.dataset.scene;
+    state.mode = document.getElementById("modeFilter").value = "";
+    render();
+  });
+
+  typeTabs.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-type]");
+    if (!btn) return;
+    [...e.currentTarget.children].forEach(b => b.classList.toggle("on", b === btn));
+    state.type = btn.dataset.type;
+    render();
+  });
+
+  document.getElementById("searchBtn").addEventListener("click", () => {
+    state.mode = document.getElementById("modeFilter").value;
+    render();
+  });
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    state.mode = document.getElementById("modeFilter").value = "";
+    render();
+  });
+
+  const toast = document.getElementById("toast");
+  function notify(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1600);
+  }
+  document.getElementById("refreshBtn").addEventListener("click", () => notify("已刷新"));
+  document.getElementById("expandBtn").addEventListener("click", () => notify("已展开"));
+  document.getElementById("dccEnabled").addEventListener("change", e => {
+    document.getElementById("dccEnabledText").textContent = e.target.checked ? "启用" : "停用";
+  });
+
+  const listView = document.getElementById("listView");
+  const detailView = document.getElementById("detailView");
+  const addView = document.getElementById("addView");
+  const auditView = document.getElementById("auditView");
+  const editView = document.getElementById("editView");
+  const pageTabTitle = document.getElementById("pageTabTitle");
+  const VIEW_TITLE = { list: "企业配置", detail: "企业配置详情", add: "企业配置新增", edit: "企业配置编辑", audit: "配置审核" };
+  function setView(view){
+    listView.style.display = view === "list" ? "block" : "none";
+    detailView.style.display = view === "detail" ? "block" : "none";
+    addView.style.display = view === "add" ? "block" : "none";
+    editView.style.display = view === "edit" ? "block" : "none";
+    auditView.style.display = view === "audit" ? "block" : "none";
+    pageTabTitle.textContent = VIEW_TITLE[view] || VIEW_TITLE.list;
+    document.querySelectorAll(".sidebar .item").forEach(item => {
+      item.classList.toggle("on", item.dataset.nav === view);
+    });
+    if (view === "edit") renderEditRules();
+  }
+  function go(view){
+    setView(view);
+    history.pushState({ view }, "", "");
+  }
+  function showList(){ go("list"); }
+  function showDetail(){ go("detail"); }
+  function showAdd(){ go("add"); }
+  function showEdit(){ go("edit"); }
+  function showAudit(){ go("audit"); }
+  document.getElementById("settingBtn").addEventListener("click", showEdit);
+  window.addEventListener("popstate", e => setView(e.state && e.state.view ? e.state.view : "list"));
+  document.querySelectorAll("[data-enter]").forEach(btn => btn.addEventListener("click", showDetail));
+  document.getElementById("listSearchBtn").addEventListener("click", () => notify("已按条件查询"));
+  document.getElementById("listResetBtn").addEventListener("click", () => {
+    document.getElementById("bizName").value = "";
+    document.getElementById("bizNo").value = "";
+  });
+  document.getElementById("listExpandBtn").addEventListener("click", () => notify("已展开"));
+  document.getElementById("listRefreshBtn").addEventListener("click", () => notify("已刷新"));
+  document.getElementById("createBtn").addEventListener("click", showAdd);
+  document.getElementById("addBackBtn").addEventListener("click", showList);
+  document.getElementById("addSubmitBtn").addEventListener("click", () => notify("已提交审核"));
+  document.querySelectorAll(".sidebar .item[data-nav]").forEach(item => {
+    item.addEventListener("click", () => item.dataset.nav === "audit" ? showAudit() : showList());
+  });
+  document.getElementById("auditSearchBtn").addEventListener("click", () => notify("已按条件查询"));
+  document.getElementById("auditResetBtn").addEventListener("click", () => {
+    document.getElementById("auditBizNo").value = "";
+    document.getElementById("auditBizName").value = "";
+    document.getElementById("auditStatus").value = "待审核";
+  });
+  document.getElementById("auditRefreshBtn").addEventListener("click", () => notify("已刷新"));
+  document.querySelectorAll("[data-audit]").forEach(btn => btn.addEventListener("click", () => notify("进入审核")));
+  document.getElementById("backBtn").addEventListener("click", showList);
+
+  history.replaceState({ view: "list" }, "", "");
+  setView("list");
+  render();
+
+  // ---------- 规则编辑 ----------
+  const ruleModal = document.getElementById("ruleModal");
+  let editing = { channel: "DLOCAL", type: "CHANNEL", index: -1 };
+  function openRuleModal(channel, type, index){
+    editing = { channel, type, index };
+    const row = index >= 0 ? DATA[channel][type][index] : null;
+    const isD = channel === "DLOCAL";
+    document.getElementById("ruleModalTitle").textContent = index >= 0 ? "编辑规则" : "新增规则";
+    document.getElementById("rulePaymentRow").style.display = isD ? "" : "none";
+    document.getElementById("ruleSource").value = row ? row[0] : "";
+    document.getElementById("rulePayment").value = isD && row ? row[1] : "PIX";
+    document.getElementById("ruleMode").value = row ? row[isD ? 2 : 1] : "自动换币";
+    document.getElementById("ruleTarget").value = row ? row[isD ? 3 : 2] : "";
+    const mark = row ? row[isD ? 4 : 3] : "";
+    document.getElementById("ruleMarkup").value = mark === "-" ? "" : mark;
+    ruleModal.style.display = "flex";
+  }
+  function closeRuleModal(){ ruleModal.style.display = "none"; }
+  function saveRule(){
+    const isD = editing.channel === "DLOCAL";
+    const source = document.getElementById("ruleSource").value.trim() || "USD";
+    const payment = document.getElementById("rulePayment").value;
+    const mode = document.getElementById("ruleMode").value;
+    const target = document.getElementById("ruleTarget").value.trim();
+    const markup = document.getElementById("ruleMarkup").value.trim();
+    const row = isD
+      ? [source, payment, mode, mode === "不转换" ? "-" : (target || "BRL"), mode === "不转换" ? "-" : (markup || "3%")]
+      : [source, mode, mode === "不转换" ? "-" : (target || "USD"), mode === "不转换" ? "-" : (markup || "1%")];
+    const list = DATA[editing.channel][editing.type];
+    if (editing.index >= 0) list[editing.index] = row; else list.push(row);
+    closeRuleModal();
+    render();
+    renderAddRules();
+    notify("已保存");
+  }
+  document.getElementById("ruleModalClose").addEventListener("click", closeRuleModal);
+  document.getElementById("ruleModalCancel").addEventListener("click", closeRuleModal);
+  document.getElementById("ruleModalSave").addEventListener("click", saveRule);
+  document.getElementById("addRuleBtn").addEventListener("click", () => openRuleModal(channelKey(state.channel, state.scene), state.type, -1));
+  bodyEl.addEventListener("click", e => {
+    const edit = e.target.closest("[data-edit]");
+    const del = e.target.closest("[data-del]");
+    const key = channelKey(state.channel, state.scene);
+    if (edit) openRuleModal(key, state.type, Number(edit.dataset.edit));
+    if (del) {
+      DATA[key][state.type].splice(Number(del.dataset.del), 1);
+      render();
+      renderAddRules();
+      notify("已删除");
+    }
+  });
+  // ---------- 新增页币种规则：初始化全部币种，行内可编辑 ----------
+  // 初始化来源与 OPS 一致：选中渠道后按币种字典（交易币种全集）生成全部行
+  const ADD_DATA = {};
+  const addState = { channel: "DLOCAL", scene: "WALLET", type: "CHANNEL", mode: "", currency: "" };
+  function addRows(key){
+    if (!ADD_DATA[key]){
+      ADD_DATA[key] = CURRENCY_CODES.map(c => key === "DLOCAL"
+        ? [c, "PIX", "不转换", "-", "-"]
+        : key === "DLOCAL_CARD"
+        ? [c, "不转换", "-", "-"]
+        : [c, "不转换", "-", "-"]);
+    }
+    return ADD_DATA[key];
+  }
+  function renderAddRules(){
+    const isD = addState.channel === "DLOCAL";
+    const isDWallet = isD && addState.scene === "WALLET";
+    const key = channelKey(addState.channel, addState.scene);
+    const chTabs = document.getElementById("addChannelTabs");
+    [...chTabs.children].forEach(b => b.classList.toggle("on", b.dataset.channel === addState.channel));
+    const sceneTabsEl = document.getElementById("addSceneTabs");
+    sceneTabsEl.style.display = isD ? "" : "none";
+    [...sceneTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.scene === addState.scene));
+    const typeTabsEl = document.getElementById("addTypeTabs");
+    typeTabsEl.children[1].style.display = isDWallet ? "none" : "";
+    if (isDWallet && addState.type === "CARDBIN") addState.type = "CHANNEL";
+    [...typeTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.type === addState.type));
+
+    const cols = HEX[key];
+    document.getElementById("addRuleHead").innerHTML =
+      "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "<th>操作</th></tr>";
+
+    const list = addRows(key);
+    document.getElementById("addCurrencyFilter").innerHTML =
+      `<option value="">请选择</option>` + list.map(r => `<option ${addState.currency===r[0]?"selected":""}>${r[0]}</option>`).join("");
+
+    const modeIdx = isDWallet ? 2 : 1, targetIdx = isDWallet ? 3 : 2, markupIdx = isDWallet ? 4 : 3;
+    let rows = list.map((r,i)=>({r,i}));
+    if (addState.mode) rows = rows.filter(x => x.r[modeIdx] === addState.mode);
+    if (addState.currency) rows = rows.filter(x => x.r[0] === addState.currency);
+
+    const body = document.getElementById("addRuleBody");
+    if (!rows.length){
+      body.innerHTML = `<tr><td colspan="${cols.length+1}"><div class="empty">暂无数据</div></td></tr>`;
+    } else {
+      body.innerHTML = rows.map(({r,i}) => {
+        const mode = r[modeIdx];
+        const off = mode === "不转换" ? "disabled" : "";
+        const target = r[targetIdx] === "-" ? "" : r[targetIdx];
+        const mark = r[markupIdx] === "-" ? "" : r[markupIdx].replace("%","");
+        const cells = [`<td>${r[0]}</td>`];
+        if (isDWallet) cells.push(`<td class="new-col">${r[1]}</td>`);
+        cells.push(`<td><select data-row="${i}" data-field="mode"><option ${mode==="自动换币"?"selected":""}>自动换币</option><option ${mode==="不转换"?"selected":""}>不转换</option></select></td>`);
+        cells.push(`<td><select data-row="${i}" data-field="target" ${off}><option value="" ${!target?"selected":""}>--</option>` +
+          TARGET_CURRENCIES.map(c => `<option ${target===c?"selected":""}>${c}</option>`).join("") + `</select></td>`);
+        cells.push(`<td><input class="markup" data-row="${i}" data-field="markup" value="${mark}" ${off}/> %</td>`);
+        cells.push(`<td class="row-actions"><button class="btn link" data-add-apply="${i}">将此汇率加点应用于全部币种</button></td>`);
+        return `<tr>${cells.join("")}</tr>`;
+      }).join("");
+    }
+    document.getElementById("addTotalText").textContent = `共 ${rows.length} 项`;
+    document.getElementById("addModeFilter").value = addState.mode;
+  }
+  document.getElementById("addChannelTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-channel]");
+    if (!btn) return;
+    addState.channel = btn.dataset.channel;
+    if (addState.channel !== "DLOCAL") addState.scene = "WALLET";
+    addState.mode = ""; addState.currency = "";
+    renderAddRules();
+  });
+  document.getElementById("addSceneTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-scene]");
+    if (!btn) return;
+    addState.scene = btn.dataset.scene;
+    addState.mode = ""; addState.currency = "";
+    renderAddRules();
+  });
+  document.getElementById("addTypeTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-type]");
+    if (!btn) return;
+    addState.type = btn.dataset.type;
+    renderAddRules();
+  });
+  document.getElementById("addSearchBtn").addEventListener("click", () => {
+    addState.mode = document.getElementById("addModeFilter").value;
+    addState.currency = document.getElementById("addCurrencyFilter").value;
+    renderAddRules();
+  });
+  document.getElementById("addResetBtn").addEventListener("click", () => {
+    addState.mode = ""; addState.currency = "";
+    renderAddRules();
+  });
+  document.getElementById("addRuleBody").addEventListener("change", e => {
+    const field = e.target.closest("[data-field]");
+    if (!field) return;
+    const isDWallet = addState.channel === "DLOCAL" && addState.scene === "WALLET";
+    const i = Number(field.dataset.row);
+    const modeIdx = isDWallet ? 2 : 1, targetIdx = isDWallet ? 3 : 2, markupIdx = isDWallet ? 4 : 3;
+    const row = ADD_DATA[channelKey(addState.channel, addState.scene)][i];
+    if (field.dataset.field === "mode"){
+      row[modeIdx] = field.value;
+      if (field.value === "不转换"){ row[targetIdx] = "-"; row[markupIdx] = "-"; }
+      else {
+        if (row[targetIdx] === "-") row[targetIdx] = "BRL";
+        if (row[markupIdx] === "-") row[markupIdx] = "1%";
+      }
+      renderAddRules();
+    } else if (field.dataset.field === "target"){
+      row[targetIdx] = field.value || "-";
+    } else if (field.dataset.field === "markup"){
+      row[markupIdx] = (field.value.trim() || "0") + "%";
+    }
+  });
+  document.getElementById("addRuleBody").addEventListener("click", e => {
+    const btn = e.target.closest("[data-add-apply]");
+    if (!btn) return;
+    const isDWallet = addState.channel === "DLOCAL" && addState.scene === "WALLET";
+    const markupIdx = isDWallet ? 4 : 3, modeIdx = isDWallet ? 2 : 1;
+    const list = ADD_DATA[channelKey(addState.channel, addState.scene)];
+    const mark = list[Number(btn.dataset.addApply)][markupIdx];
+    list.forEach(r => { if (r[modeIdx] === "自动换币") r[markupIdx] = mark; });
+    renderAddRules();
+    notify("已应用到全部币种");
+  });
+  document.getElementById("addRulesRefresh").addEventListener("click", () => notify("已刷新"));
+  renderAddRules();
+
+  // ---------- 编辑页（详情右上「设置」进入） ----------
+  const editState = { channel: "DLOCAL", scene: "WALLET", type: "CHANNEL", mode: "", currency: "" };
+
+  function renderEditRules(){
+    const isD = editState.channel === "DLOCAL";
+    const isDWallet = isD && editState.scene === "WALLET";
+    const key = channelKey(editState.channel, editState.scene);
+    const chTabs = document.getElementById("editChannelTabs");
+    [...chTabs.children].forEach(b => b.classList.toggle("on", b.dataset.channel === editState.channel));
+    const sceneTabsEl = document.getElementById("editSceneTabs");
+    sceneTabsEl.style.display = isD ? "" : "none";
+    [...sceneTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.scene === editState.scene));
+    const typeTabsEl = document.getElementById("editTypeTabs");
+    typeTabsEl.children[1].style.display = isDWallet ? "none" : "";
+    if (isDWallet && editState.type === "CARDBIN") editState.type = "CHANNEL";
+    [...typeTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.type === editState.type));
+
+    const cols = HEX[key];
+    document.getElementById("editRuleHead").innerHTML =
+      "<tr>" + cols.map(c => `<th>${c}</th>`).join("") + "<th>操作</th></tr>";
+
+    // 商户出示币种筛选下拉
+    const curSel = document.getElementById("editCurrencyFilter");
+    const currencies = [...new Set((DATA[key][editState.type] || []).map(r => r[0]))];
+    curSel.innerHTML = `<option value="">请选择</option>` + currencies.map(c => `<option ${editState.currency===c?"selected":""}>${c}</option>`).join("");
+
+    const modeIdx = isDWallet ? 2 : 1;
+    const targetIdx = isDWallet ? 3 : 2;
+    const markupIdx = isDWallet ? 4 : 3;
+    const list = DATA[key][editState.type] || [];
+    let rows = list.map((r, i) => ({ r, i }));
+    if (editState.mode) rows = rows.filter(x => x.r[modeIdx] === editState.mode);
+    if (editState.currency) rows = rows.filter(x => x.r[0] === editState.currency);
+
+    const bodyEdit = document.getElementById("editRuleBody");
+    if (!rows.length){
+      bodyEdit.innerHTML = `<tr><td colspan="${cols.length + 1}"><div class="empty">暂无数据</div></td></tr>`;
+    } else {
+      bodyEdit.innerHTML = rows.map(({ r, i }) => {
+        const mode = r[modeIdx];
+        const off = mode === "不转换" ? "disabled" : "";
+        const target = r[targetIdx] === "-" ? "" : r[targetIdx];
+        const mark = r[markupIdx] === "-" ? "" : r[markupIdx].replace("%","");
+        const cells = [`<td>${r[0]}</td>`];
+        if (isDWallet) cells.push(`<td class="new-col">${r[1]}</td>`);
+        cells.push(`<td><select data-row="${i}" data-field="mode">
+            <option ${mode==="自动换币"?"selected":""}>自动换币</option>
+            <option ${mode==="不转换"?"selected":""}>不转换</option></select></td>`);
+        cells.push(`<td><select data-row="${i}" data-field="target" ${off}>
+            <option value="" ${!target?"selected":""}>--</option>` +
+            TARGET_CURRENCIES.map(c => `<option ${target===c?"selected":""}>${c}</option>`).join("") + `</select></td>`);
+        cells.push(`<td><input class="markup" data-row="${i}" data-field="markup" value="${mark}" ${off}/> %</td>`);
+        cells.push(`<td class="row-actions"><button class="btn link" data-apply-all="${i}">将此汇率加点应用于全部币种</button></td>`);
+        return `<tr>${cells.join("")}</tr>`;
+      }).join("");
+    }
+    document.getElementById("editTotalText").textContent = `共 ${rows.length} 项`;
+    document.getElementById("editModeFilter").value = editState.mode;
+  }
+
+  document.getElementById("editChannelTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-channel]");
+    if (!btn) return;
+    editState.channel = btn.dataset.channel;
+    if (editState.channel !== "DLOCAL") editState.scene = "WALLET";
+    editState.mode = ""; editState.currency = "";
+    renderEditRules();
+  });
+  document.getElementById("editSceneTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-scene]");
+    if (!btn) return;
+    editState.scene = btn.dataset.scene;
+    editState.mode = ""; editState.currency = "";
+    renderEditRules();
+  });
+  document.getElementById("editTypeTabs").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-type]");
+    if (!btn) return;
+    editState.type = btn.dataset.type;
+    renderEditRules();
+  });
+  document.getElementById("editSearchBtn").addEventListener("click", () => {
+    editState.mode = document.getElementById("editModeFilter").value;
+    editState.currency = document.getElementById("editCurrencyFilter").value;
+    renderEditRules();
+  });
+  document.getElementById("editResetBtn").addEventListener("click", () => {
+    editState.mode = ""; editState.currency = "";
+    renderEditRules();
+  });
+  document.getElementById("editRefreshBtn").addEventListener("click", () => notify("已刷新"));
+  document.getElementById("editBackBtn").addEventListener("click", showDetail);
+  document.getElementById("editSubmitBtn").addEventListener("click", () => notify("已提交审核"));
+
+  document.getElementById("editRuleBody").addEventListener("change", e => {
+    const field = e.target.closest("[data-field]");
+    if (!field) return;
+    const isDWallet = editState.channel === "DLOCAL" && editState.scene === "WALLET";
+    const i = Number(field.dataset.row);
+    const modeIdx = isDWallet ? 2 : 1, targetIdx = isDWallet ? 3 : 2, markupIdx = isDWallet ? 4 : 3;
+    const row = DATA[channelKey(editState.channel, editState.scene)][editState.type][i];
+    if (field.dataset.field === "mode"){
+      row[modeIdx] = field.value;
+      if (field.value === "不转换"){ row[targetIdx] = "-"; row[markupIdx] = "-"; }
+      else {
+        if (row[targetIdx] === "-") row[targetIdx] = isDWallet ? "BRL" : "USD";
+        if (row[markupIdx] === "-") row[markupIdx] = "1%";
+      }
+      renderEditRules(); render();
+    } else if (field.dataset.field === "target"){
+      row[targetIdx] = field.value || "-";
+    } else if (field.dataset.field === "markup"){
+      row[markupIdx] = (field.value.trim() || "0") + "%";
+    }
+  });
+  document.getElementById("editRuleBody").addEventListener("click", e => {
+    const btn = e.target.closest("[data-apply-all]");
+    if (!btn) return;
+    const isDWallet = editState.channel === "DLOCAL" && editState.scene === "WALLET";
+    const markupIdx = isDWallet ? 4 : 3;
+    const list = DATA[channelKey(editState.channel, editState.scene)][editState.type];
+    const mark = list[Number(btn.dataset.applyAll)][markupIdx];
+    list.forEach(r => { if (r[isDWallet?2:1] === "自动换币") r[markupIdx] = mark; });
+    renderEditRules(); render();
+    notify("已应用到全部币种");
+  });
+</script>
+</body>
+</html>
