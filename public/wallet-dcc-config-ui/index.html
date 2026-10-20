@@ -343,6 +343,7 @@
                 <button data-channel="WORLDPAY">Worldpay</button>
                 <button data-channel="STRIPE">Stripe</button>
                 <button data-channel="DLOCAL" class="on">DLOCAL</button>
+                <button data-channel="DRAGONPAY">DRAGONPAY</button>
               </div>
               <div class="tabs" id="addSceneTabs">
                 <button data-scene="WALLET" class="on">钱包</button>
@@ -415,6 +416,7 @@
                 <button data-channel="WORLDPAY" class="on">Worldpay</button>
                 <button data-channel="STRIPE">Stripe</button>
                 <button data-channel="DLOCAL">DLOCAL</button>
+                <button data-channel="DRAGONPAY">DRAGONPAY</button>
               </div>
               <div class="tabs" id="editSceneTabs">
                 <button data-scene="WALLET" class="on">钱包</button>
@@ -568,6 +570,7 @@
               <button data-channel="WORLDPAY">Worldpay</button>
               <button data-channel="STRIPE">Stripe</button>
               <button data-channel="DLOCAL" class="on">DLOCAL</button>
+              <button data-channel="DRAGONPAY">DRAGONPAY</button>
             </div>
 
             <div class="tabs" id="sceneTabs">
@@ -629,7 +632,7 @@
     <div class="modal-body">
       <table class="info-table">
         <tr><td class="k">商户出示币种</td><td><input type="text" id="ruleSource" placeholder="如 USD" /></td></tr>
-        <tr id="rulePaymentRow"><td class="k">支付方式</td><td><select id="rulePayment"><option>PIX</option><option>PIC_PAY</option></select></td></tr>
+        <tr id="rulePaymentRow"><td class="k">支付方式</td><td><select id="rulePayment"><option>PIX</option><option>PIC_PAY</option><option>G_CASH</option><option>PAYMAYA</option><option>GRABPAY</option><option>SHOPEE_PAY</option></select></td></tr>
         <tr>
           <td class="k">处理方式</td>
           <td><select id="ruleMode"><option>自动换币</option><option>不转换</option></select></td>
@@ -687,6 +690,16 @@
         ["EUR","自动换币","BRL","2%"]
       ],
       CARDBIN: []
+    },
+    DRAGONPAY: {
+      CHANNEL: [
+        ["USD","G_CASH","自动换币","PHP","3%"],
+        ["USD","PAYMAYA","自动换币","PHP","3%"],
+        ["USD","GRABPAY","自动换币","PHP","3%"],
+        ["USD","SHOPEE_PAY","自动换币","PHP","3%"],
+        ["PHP","G_CASH","不转换","-","-"]
+      ],
+      CARDBIN: []
     }
   };
 
@@ -700,28 +713,36 @@
     WORLDPAY: ["商户出示币种","处理方式","目标币种","汇率加点"],
     STRIPE: ["商户出示币种","处理方式","目标币种","汇率加点"],
     DLOCAL: ["商户出示币种","支付方式","处理方式","目标币种","汇率加点"],
-    DLOCAL_CARD: ["商户出示币种","处理方式","目标币种","汇率加点"]
+    DLOCAL_CARD: ["商户出示币种","处理方式","目标币种","汇率加点"],
+    DRAGONPAY: ["商户出示币种","支付方式","处理方式","目标币种","汇率加点"]
   };
+
+  const PAYMENT_METHODS = {
+    DLOCAL: ["PIX", "PIC_PAY"],
+    DRAGONPAY: ["G_CASH", "PAYMAYA", "GRABPAY", "SHOPEE_PAY"]
+  };
+  const DEFAULT_TARGET = { DLOCAL: "BRL", DRAGONPAY: "PHP" };
 
   function channelKey(channel, scene){
     return channel === "DLOCAL" && scene === "CARD" ? "DLOCAL_CARD" : channel;
   }
+
+  function hasPaymentMethod(key){ return Boolean(PAYMENT_METHODS[key]); }
+  function defaultTarget(key){ return DEFAULT_TARGET[key] || "USD"; }
 
   const TARGET_CURRENCIES = ["BRL","USD","EUR","JPY","KRW","HKD","TWD","GBP","AUD","CAD"];
   // 与 OPS 数据字典 CURRENCY 一致：来自后端 CurrencyEnum.values()（共 161 个）
   const CURRENCY_CODES = ("CNY,USD,JPY,RUB,EUR,GBP,HKD,AUD,CAD,INR,KRW,MOP,MYR,NZD,SGD,CHF,THB,TWD,KWD,BHD,OMR,JOD,QAR,SAR,AED,SEK,DKK,NOK,ZAR,PHP,TRY,ILS,BRL,CZK,MXN,PLN,HUF," +
     "AFN,ALL,AMD,ANG,AOA,ARS,AWG,AZN,BAM,BBD,BDT,BGN,BIF,BMD,BND,BOB,BOV,BSD,BTN,BWP,BYN,BZD,CDF,CLF,CLP,COP,CRC,CUC,CUP,CVE,DJF,DOP,DZD,EGP,ERN,ETB,FJD,FKP,GEL,GHS,GIP,GMD,GNF,GTQ,GYD,HNL,HRK,HTG,IDR,IQD,IRR,ISK,JMD,KES,KGS,KHR,KMF,KPW,KYD,KZT,LAK,LBP,LKR,LRD,LSL,LYD,MAD,MDL,MGA,MKD,MMK,MNT,MRO,MUR,MVR,MWK,MXV,MZN,NAD,NGN,NIO,NPR,PAB,PEN,PGK,PKR,PYG,RON,RSD,RWF,SBD,SCR,SDG,SHP,SLE,SOS,SRD,STD,SYP,SZL,TJS,TMT,TND,TOP,TTD,TZS,UAH,UGX,USN,USS,UYU,UZS,VEF,VND,VUV,WST,XAF,XCD,XOF,XPF,XXX,YER,ZMW,ZWL").split(",");
 
-  function isDlocal(){ return state.channel === "DLOCAL"; }
-  function isDlocalWallet(){ return isDlocal() && state.scene === "WALLET"; }
-
   function render(){
     const key = channelKey(state.channel, state.scene);
+    const localPayment = hasPaymentMethod(key);
     const sceneTabs = document.getElementById("sceneTabs");
-    sceneTabs.style.display = isDlocal() ? "" : "none";
+    sceneTabs.style.display = state.channel === "DLOCAL" ? "" : "none";
     [...sceneTabs.children].forEach(b => b.classList.toggle("on", b.dataset.scene === state.scene));
-    // dLocal：钱包没有卡 BIN，隐藏卡 BIN 类型页签
-    if (isDlocalWallet()) {
+    // DLOCAL 钱包和 Dragonpay 都没有卡 BIN，隐藏卡 BIN 类型页签
+    if (localPayment) {
       typeTabs.children[1].style.display = "none";
       if (state.type === "CARDBIN") state.type = "CHANNEL";
     } else {
@@ -730,11 +751,11 @@
 
     const cols = HEX[key];
     head.innerHTML = "<tr>" + cols.map((c,i) =>
-      `<th>${c}${(isDlocalWallet() && i === 1) ? '<span class="new-tag">新增</span>' : ""}</th>`
+      `<th>${c}${(localPayment && i === 1) ? '<span class="new-tag">新增</span>' : ""}</th>`
     ).join("") + "<th>操作</th></tr>";
 
     let rows = (DATA[key][state.type] || []).slice();
-    if (isDlocalWallet()) {
+    if (localPayment) {
       const modeIdx = 2;
       if (state.mode) rows = rows.filter(r => r[modeIdx] === state.mode);
     } else {
@@ -751,7 +772,7 @@
           if (v === "-") return `<td class="muted">-</td>`;
           if (v === "自动换币") return `<td><span class="tag">自动换币</span></td>`;
           if (v === "不转换") return `<td><span class="tag off">不转换</span></td>`;
-          if (isDlocalWallet() && i === 1) return `<td class="new-col">${v}</td>`;
+          if (localPayment && i === 1) return `<td class="new-col">${v}</td>`;
           return `<td>${v}</td>`;
         }).join("");
         return `<tr>${cells}<td class="row-actions"><button class="btn link" data-edit="${realIdx}">编辑</button><button class="btn link" data-del="${realIdx}">删除</button></td></tr>`;
@@ -767,6 +788,7 @@
     if (!btn) return;
     [...e.currentTarget.children].forEach(b => b.classList.toggle("on", b === btn));
     state.channel = btn.dataset.channel;
+    if (state.channel !== "DLOCAL") state.scene = "WALLET";
     state.mode = document.getElementById("modeFilter").value = "";
     render();
   });
@@ -872,27 +894,30 @@
   function openRuleModal(channel, type, index){
     editing = { channel, type, index };
     const row = index >= 0 ? DATA[channel][type][index] : null;
-    const isD = channel === "DLOCAL";
+    const localPayment = hasPaymentMethod(channel);
+    const methods = PAYMENT_METHODS[channel] || [];
     document.getElementById("ruleModalTitle").textContent = index >= 0 ? "编辑规则" : "新增规则";
-    document.getElementById("rulePaymentRow").style.display = isD ? "" : "none";
+    document.getElementById("rulePaymentRow").style.display = localPayment ? "" : "none";
+    document.getElementById("rulePayment").innerHTML =
+      methods.map(method => `<option>${method}</option>`).join("");
     document.getElementById("ruleSource").value = row ? row[0] : "";
-    document.getElementById("rulePayment").value = isD && row ? row[1] : "PIX";
-    document.getElementById("ruleMode").value = row ? row[isD ? 2 : 1] : "自动换币";
-    document.getElementById("ruleTarget").value = row ? row[isD ? 3 : 2] : "";
-    const mark = row ? row[isD ? 4 : 3] : "";
+    document.getElementById("rulePayment").value = localPayment && row ? row[1] : methods[0] || "";
+    document.getElementById("ruleMode").value = row ? row[localPayment ? 2 : 1] : "自动换币";
+    document.getElementById("ruleTarget").value = row ? row[localPayment ? 3 : 2] : "";
+    const mark = row ? row[localPayment ? 4 : 3] : "";
     document.getElementById("ruleMarkup").value = mark === "-" ? "" : mark;
     ruleModal.style.display = "flex";
   }
   function closeRuleModal(){ ruleModal.style.display = "none"; }
   function saveRule(){
-    const isD = editing.channel === "DLOCAL";
+    const localPayment = hasPaymentMethod(editing.channel);
     const source = document.getElementById("ruleSource").value.trim() || "USD";
     const payment = document.getElementById("rulePayment").value;
     const mode = document.getElementById("ruleMode").value;
     const target = document.getElementById("ruleTarget").value.trim();
     const markup = document.getElementById("ruleMarkup").value.trim();
-    const row = isD
-      ? [source, payment, mode, mode === "不转换" ? "-" : (target || "BRL"), mode === "不转换" ? "-" : (markup || "3%")]
+    const row = localPayment
+      ? [source, payment, mode, mode === "不转换" ? "-" : (target || defaultTarget(editing.channel)), mode === "不转换" ? "-" : (markup || "3%")]
       : [source, mode, mode === "不转换" ? "-" : (target || "USD"), mode === "不转换" ? "-" : (markup || "1%")];
     const list = DATA[editing.channel][editing.type];
     if (editing.index >= 0) list[editing.index] = row; else list.push(row);
@@ -923,26 +948,24 @@
   const addState = { channel: "DLOCAL", scene: "WALLET", type: "CHANNEL", mode: "", currency: "" };
   function addRows(key){
     if (!ADD_DATA[key]){
-      ADD_DATA[key] = CURRENCY_CODES.map(c => key === "DLOCAL"
-        ? [c, "PIX", "不转换", "-", "-"]
-        : key === "DLOCAL_CARD"
-        ? [c, "不转换", "-", "-"]
+      const methods = PAYMENT_METHODS[key];
+      ADD_DATA[key] = CURRENCY_CODES.map(c => methods
+        ? [c, methods[0], "不转换", "-", "-"]
         : [c, "不转换", "-", "-"]);
     }
     return ADD_DATA[key];
   }
   function renderAddRules(){
-    const isD = addState.channel === "DLOCAL";
-    const isDWallet = isD && addState.scene === "WALLET";
     const key = channelKey(addState.channel, addState.scene);
+    const localPayment = hasPaymentMethod(key);
     const chTabs = document.getElementById("addChannelTabs");
     [...chTabs.children].forEach(b => b.classList.toggle("on", b.dataset.channel === addState.channel));
     const sceneTabsEl = document.getElementById("addSceneTabs");
-    sceneTabsEl.style.display = isD ? "" : "none";
+    sceneTabsEl.style.display = addState.channel === "DLOCAL" ? "" : "none";
     [...sceneTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.scene === addState.scene));
     const typeTabsEl = document.getElementById("addTypeTabs");
-    typeTabsEl.children[1].style.display = isDWallet ? "none" : "";
-    if (isDWallet && addState.type === "CARDBIN") addState.type = "CHANNEL";
+    typeTabsEl.children[1].style.display = localPayment ? "none" : "";
+    if (localPayment && addState.type === "CARDBIN") addState.type = "CHANNEL";
     [...typeTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.type === addState.type));
 
     const cols = HEX[key];
@@ -953,7 +976,7 @@
     document.getElementById("addCurrencyFilter").innerHTML =
       `<option value="">请选择</option>` + list.map(r => `<option ${addState.currency===r[0]?"selected":""}>${r[0]}</option>`).join("");
 
-    const modeIdx = isDWallet ? 2 : 1, targetIdx = isDWallet ? 3 : 2, markupIdx = isDWallet ? 4 : 3;
+    const modeIdx = localPayment ? 2 : 1, targetIdx = localPayment ? 3 : 2, markupIdx = localPayment ? 4 : 3;
     let rows = list.map((r,i)=>({r,i}));
     if (addState.mode) rows = rows.filter(x => x.r[modeIdx] === addState.mode);
     if (addState.currency) rows = rows.filter(x => x.r[0] === addState.currency);
@@ -968,7 +991,7 @@
         const target = r[targetIdx] === "-" ? "" : r[targetIdx];
         const mark = r[markupIdx] === "-" ? "" : r[markupIdx].replace("%","");
         const cells = [`<td>${r[0]}</td>`];
-        if (isDWallet) cells.push(`<td class="new-col">${r[1]}</td>`);
+        if (localPayment) cells.push(`<td class="new-col">${r[1]}</td>`);
         cells.push(`<td><select data-row="${i}" data-field="mode"><option ${mode==="自动换币"?"selected":""}>自动换币</option><option ${mode==="不转换"?"selected":""}>不转换</option></select></td>`);
         cells.push(`<td><select data-row="${i}" data-field="target" ${off}><option value="" ${!target?"selected":""}>--</option>` +
           TARGET_CURRENCIES.map(c => `<option ${target===c?"selected":""}>${c}</option>`).join("") + `</select></td>`);
@@ -1013,15 +1036,16 @@
   document.getElementById("addRuleBody").addEventListener("change", e => {
     const field = e.target.closest("[data-field]");
     if (!field) return;
-    const isDWallet = addState.channel === "DLOCAL" && addState.scene === "WALLET";
+    const key = channelKey(addState.channel, addState.scene);
+    const localPayment = hasPaymentMethod(key);
     const i = Number(field.dataset.row);
-    const modeIdx = isDWallet ? 2 : 1, targetIdx = isDWallet ? 3 : 2, markupIdx = isDWallet ? 4 : 3;
-    const row = ADD_DATA[channelKey(addState.channel, addState.scene)][i];
+    const modeIdx = localPayment ? 2 : 1, targetIdx = localPayment ? 3 : 2, markupIdx = localPayment ? 4 : 3;
+    const row = ADD_DATA[key][i];
     if (field.dataset.field === "mode"){
       row[modeIdx] = field.value;
       if (field.value === "不转换"){ row[targetIdx] = "-"; row[markupIdx] = "-"; }
       else {
-        if (row[targetIdx] === "-") row[targetIdx] = "BRL";
+        if (row[targetIdx] === "-") row[targetIdx] = defaultTarget(key);
         if (row[markupIdx] === "-") row[markupIdx] = "1%";
       }
       renderAddRules();
@@ -1034,9 +1058,10 @@
   document.getElementById("addRuleBody").addEventListener("click", e => {
     const btn = e.target.closest("[data-add-apply]");
     if (!btn) return;
-    const isDWallet = addState.channel === "DLOCAL" && addState.scene === "WALLET";
-    const markupIdx = isDWallet ? 4 : 3, modeIdx = isDWallet ? 2 : 1;
-    const list = ADD_DATA[channelKey(addState.channel, addState.scene)];
+    const key = channelKey(addState.channel, addState.scene);
+    const localPayment = hasPaymentMethod(key);
+    const markupIdx = localPayment ? 4 : 3, modeIdx = localPayment ? 2 : 1;
+    const list = ADD_DATA[key];
     const mark = list[Number(btn.dataset.addApply)][markupIdx];
     list.forEach(r => { if (r[modeIdx] === "自动换币") r[markupIdx] = mark; });
     renderAddRules();
@@ -1049,17 +1074,16 @@
   const editState = { channel: "DLOCAL", scene: "WALLET", type: "CHANNEL", mode: "", currency: "" };
 
   function renderEditRules(){
-    const isD = editState.channel === "DLOCAL";
-    const isDWallet = isD && editState.scene === "WALLET";
     const key = channelKey(editState.channel, editState.scene);
+    const localPayment = hasPaymentMethod(key);
     const chTabs = document.getElementById("editChannelTabs");
     [...chTabs.children].forEach(b => b.classList.toggle("on", b.dataset.channel === editState.channel));
     const sceneTabsEl = document.getElementById("editSceneTabs");
-    sceneTabsEl.style.display = isD ? "" : "none";
+    sceneTabsEl.style.display = editState.channel === "DLOCAL" ? "" : "none";
     [...sceneTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.scene === editState.scene));
     const typeTabsEl = document.getElementById("editTypeTabs");
-    typeTabsEl.children[1].style.display = isDWallet ? "none" : "";
-    if (isDWallet && editState.type === "CARDBIN") editState.type = "CHANNEL";
+    typeTabsEl.children[1].style.display = localPayment ? "none" : "";
+    if (localPayment && editState.type === "CARDBIN") editState.type = "CHANNEL";
     [...typeTabsEl.children].forEach(b => b.classList.toggle("on", b.dataset.type === editState.type));
 
     const cols = HEX[key];
@@ -1071,9 +1095,9 @@
     const currencies = [...new Set((DATA[key][editState.type] || []).map(r => r[0]))];
     curSel.innerHTML = `<option value="">请选择</option>` + currencies.map(c => `<option ${editState.currency===c?"selected":""}>${c}</option>`).join("");
 
-    const modeIdx = isDWallet ? 2 : 1;
-    const targetIdx = isDWallet ? 3 : 2;
-    const markupIdx = isDWallet ? 4 : 3;
+    const modeIdx = localPayment ? 2 : 1;
+    const targetIdx = localPayment ? 3 : 2;
+    const markupIdx = localPayment ? 4 : 3;
     const list = DATA[key][editState.type] || [];
     let rows = list.map((r, i) => ({ r, i }));
     if (editState.mode) rows = rows.filter(x => x.r[modeIdx] === editState.mode);
@@ -1089,7 +1113,7 @@
         const target = r[targetIdx] === "-" ? "" : r[targetIdx];
         const mark = r[markupIdx] === "-" ? "" : r[markupIdx].replace("%","");
         const cells = [`<td>${r[0]}</td>`];
-        if (isDWallet) cells.push(`<td class="new-col">${r[1]}</td>`);
+        if (localPayment) cells.push(`<td class="new-col">${r[1]}</td>`);
         cells.push(`<td><select data-row="${i}" data-field="mode">
             <option ${mode==="自动换币"?"selected":""}>自动换币</option>
             <option ${mode==="不转换"?"selected":""}>不转换</option></select></td>`);
@@ -1142,15 +1166,16 @@
   document.getElementById("editRuleBody").addEventListener("change", e => {
     const field = e.target.closest("[data-field]");
     if (!field) return;
-    const isDWallet = editState.channel === "DLOCAL" && editState.scene === "WALLET";
+    const key = channelKey(editState.channel, editState.scene);
+    const localPayment = hasPaymentMethod(key);
     const i = Number(field.dataset.row);
-    const modeIdx = isDWallet ? 2 : 1, targetIdx = isDWallet ? 3 : 2, markupIdx = isDWallet ? 4 : 3;
-    const row = DATA[channelKey(editState.channel, editState.scene)][editState.type][i];
+    const modeIdx = localPayment ? 2 : 1, targetIdx = localPayment ? 3 : 2, markupIdx = localPayment ? 4 : 3;
+    const row = DATA[key][editState.type][i];
     if (field.dataset.field === "mode"){
       row[modeIdx] = field.value;
       if (field.value === "不转换"){ row[targetIdx] = "-"; row[markupIdx] = "-"; }
       else {
-        if (row[targetIdx] === "-") row[targetIdx] = isDWallet ? "BRL" : "USD";
+        if (row[targetIdx] === "-") row[targetIdx] = defaultTarget(key);
         if (row[markupIdx] === "-") row[markupIdx] = "1%";
       }
       renderEditRules(); render();
@@ -1163,11 +1188,12 @@
   document.getElementById("editRuleBody").addEventListener("click", e => {
     const btn = e.target.closest("[data-apply-all]");
     if (!btn) return;
-    const isDWallet = editState.channel === "DLOCAL" && editState.scene === "WALLET";
-    const markupIdx = isDWallet ? 4 : 3;
-    const list = DATA[channelKey(editState.channel, editState.scene)][editState.type];
+    const key = channelKey(editState.channel, editState.scene);
+    const localPayment = hasPaymentMethod(key);
+    const markupIdx = localPayment ? 4 : 3;
+    const list = DATA[key][editState.type];
     const mark = list[Number(btn.dataset.applyAll)][markupIdx];
-    list.forEach(r => { if (r[isDWallet?2:1] === "自动换币") r[markupIdx] = mark; });
+    list.forEach(r => { if (r[localPayment ? 2 : 1] === "自动换币") r[markupIdx] = mark; });
     renderEditRules(); render();
     notify("已应用到全部币种");
   });
